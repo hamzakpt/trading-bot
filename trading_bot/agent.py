@@ -9,8 +9,10 @@ import keras.backend as K
 from keras.models import Sequential
 from keras.models import load_model, clone_model
 from keras.layers import Dense
-from keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam
 
+# # Disables eager execution --> super speeds up the model.predict line and the whole script
+tf.compat.v1.disable_eager_execution()
 
 def huber_loss(y_true, y_pred, clip_delta=1.0):
     """Huber loss - Custom Loss Function for Q Learning
