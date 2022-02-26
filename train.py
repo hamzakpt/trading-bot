@@ -37,6 +37,19 @@ from trading_bot.utils import (
     show_train_result,
     switch_k_backend_device
 )
+import tensorflow as tf
+import os
+num_threads = 5
+os.environ["OMP_NUM_THREADS"] = "8"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "8"
+os.environ["TF_NUM_INTEROP_THREADS"] = "8"
+tf.config.threading.set_inter_op_parallelism_threads(
+    num_threads
+)
+tf.config.threading.set_intra_op_parallelism_threads(
+    num_threads
+)
+tf.config.set_soft_device_placement(True)
 
 
 def main(train_stock, val_stock, window_size, batch_size, ep_count,
@@ -55,11 +68,14 @@ def main(train_stock, val_stock, window_size, batch_size, ep_count,
     initial_offset = val_data[1] - val_data[0]
 
     for episode in range(1, ep_count + 1):
+        import time
+        start = time.time()
         train_result = train_model(agent, episode, train_data, ep_count=ep_count,
                                    batch_size=batch_size, window_size=window_size)
         val_result, _ = evaluate_model(agent, val_data, window_size, debug)
         show_train_result(train_result, val_result, initial_offset)
-
+        end = time.time()
+        print("total time taken : ", end-start)
 
 if __name__ == "__main__":
     args = docopt(__doc__)
@@ -69,7 +85,9 @@ if __name__ == "__main__":
     strategy = args["--strategy"]
     window_size = int(args["--window-size"])
     batch_size = int(args["--batch-size"])
+    batch_size = 16
     ep_count = int(args["--episode-count"])
+    ep_count = 1
     model_name = args["--model-name"]
     pretrained = args["--pretrained"]
     debug = args["--debug"]

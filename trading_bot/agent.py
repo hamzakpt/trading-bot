@@ -3,7 +3,6 @@ import random
 from collections import deque
 
 import numpy as np
-import tensorflow as tf
 import keras.backend as K
 
 from keras.models import Sequential
@@ -12,7 +11,24 @@ from keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 
 # # Disables eager execution --> super speeds up the model.predict line and the whole script
-tf.compat.v1.disable_eager_execution()
+K.tf.compat.v1.disable_eager_execution()
+# config = K.tf.compat.v1.ConfigProto(device_count={"CPU": 18},
+#                         inter_op_parallelism_threads=128,
+#                         intra_op_parallelism_threads=128)
+# sess = K.tf.compat.v1.Session(config=config)
+# K.set_session(sess)
+# import os
+# num_threads = 5
+# os.environ["OMP_NUM_THREADS"] = "8"
+# os.environ["TF_NUM_INTRAOP_THREADS"] = "8"
+# os.environ["TF_NUM_INTEROP_THREADS"] = "8"
+# tf.config.threading.set_inter_op_parallelism_threads(
+#     num_threads
+# )
+# tf.config.threading.set_intra_op_parallelism_threads(
+#     num_threads
+# )
+# tf.config.set_soft_device_placement(True)
 
 def huber_loss(y_true, y_pred, clip_delta=1.0):
     """Huber loss - Custom Loss Function for Q Learning
@@ -69,11 +85,13 @@ class Agent:
     def _model(self):
         """Creates the model
         """
+        tf.config.threading.set_intra_op_parallelism_threads(1)
+        tf.config.threading.set_inter_op_parallelism_threads(1)
         model = Sequential()
         model.add(Dense(units=128, activation="relu", input_dim=self.state_size))
         model.add(Dense(units=256, activation="relu"))
-        model.add(Dense(units=256, activation="relu"))
         model.add(Dense(units=128, activation="relu"))
+        model.add(Dense(units=64, activation="relu"))
         model.add(Dense(units=self.action_size))
 
         model.compile(loss=self.loss, optimizer=self.optimizer)
